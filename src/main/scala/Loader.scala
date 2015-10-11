@@ -15,7 +15,9 @@ class Loader {
   }
 
   def loadMNISTData(path: String) = {
-    val data = fromFile(path).getLines.map(_.split(",").map(_.toDouble)).toArray
-    println(data.size)
+    val data = fromFile(path).getLines.map(_.split(",").map(_.toDouble) ).toArray
+    val features = DenseMatrix(data.map(_.drop(1)): _*)
+    val labels = DenseVector( data.map(_(0).toInt) )
+    (features, labels)
   }
 }

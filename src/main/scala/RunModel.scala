@@ -18,8 +18,7 @@ object RunModel {
 
   def runKNN(loader: Loader) = {
     val path = "data/MNIST.csv"
-    loader.loadMNISTData(path)
-//    val (features,labels) = loader.loadMNISTData(path)
-//    println(features.rows)
+    val (features,labels) = loader.loadMNISTData(path)
+    println(features.cols)
   }
 }
