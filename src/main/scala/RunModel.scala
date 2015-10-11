@@ -19,6 +19,13 @@ object RunModel {
   def runKNN(loader: Loader) = {
     val path = "data/MNIST.csv"
     val (features,labels) = loader.loadMNISTData(path)
-    println(features.cols)
+
+    val len = labels.length
+    val cut = (0.6 * len).toInt
+    val (x, y, xCV, yCV) = (features(0 to cut, ::), labels(0 to cut), features(cut to len-1, ::), labels(cut to len-1))
+
+    val classifierKNN = new KNN
+    classifierKNN.train(x, y)
+    println(classifierKNN.trainingLabels.length)
   }
 }
