@@ -22,10 +22,13 @@ object RunModel {
 
     val len = labels.length
     val cut = (0.6 * len).toInt
-    val (x, y, xCV, yCV) = (features(0 to cut, ::), labels(0 to cut), features(cut to len-1, ::), labels(cut to len-1))
+    val (x, y, xCV, yCV) = (features(0 to cut-1, ::), labels(0 to cut-1), features(cut to len-1, ::), labels(cut to len-1))
 
     val classifierKNN = new KNN
     classifierKNN.train(x, y)
-    println(classifierKNN.trainingLabels.length)
+    println("Training set length = "+classifierKNN.trainingLabels.length)
+    println("Test set length = "+yCV.length)
+
+    classifierKNN.predict(xCV)
   }
 }
