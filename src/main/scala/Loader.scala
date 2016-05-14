@@ -9,7 +9,7 @@ class Loader {
                                (data.map(_(2).toDouble)),
                                (data.map(_(3).toDouble)) )
     // convert to binary classification task
-    val labels = DenseVector( data.map(_(4)).map(name => if (name == "Iris-setosa") 1 else 0) )
+    val labels = data.map(_(4)).map(name => if (name == "Iris-setosa") 1 else 0).toList
 
     (features.t, labels)
   }
@@ -17,7 +17,7 @@ class Loader {
   def loadMNISTData(path: String) = {
     val data = fromFile(path).getLines.map(_.split(",").map(_.toDouble) ).toArray
     val features = DenseMatrix(data.map(_.drop(1)): _*)
-    val labels = DenseVector( data.map(_(0).toInt) )
+    val labels = data.map(_(0).toInt).toList
     (features, labels)
   }
 }
