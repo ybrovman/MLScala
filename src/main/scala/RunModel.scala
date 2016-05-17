@@ -30,19 +30,13 @@ object RunModel {
 
     val classifierKNN = new KNN
     classifierKNN.k = 3
+//    classifierKNN.useClusters = true
 
     val startTrainTime = System.nanoTime()
     classifierKNN.train(x, y)
     val trainTime = System.nanoTime()
     println("Training set length = "+classifierKNN.trainingLabels.length)
     println("Test set length = "+yCV.length)
-
-    def printHist() = {
-      val histTrain = y.groupBy(x => x).mapValues(_.size)
-      println("Training set histogram: "+histTrain + "   Mean="+mean(histTrain.values.map(_.toDouble))+ "   STD="+stddev(histTrain.values.map(_.toDouble)))
-      val histTest = yCV.groupBy(x => x).mapValues(_.size)
-      println("Test set histogram: " + histTest + "   Mean=" + mean(histTest.values.map(_.toDouble)) + "   STD=" + stddev(histTest.values.map(_.toDouble)))
-    }
 
     val startPredictionTime = System.nanoTime()
     val result = classifierKNN.predict(xCV)
@@ -57,6 +51,16 @@ object RunModel {
 //      println("k="+x.toString+"   error="+error(result, yCV).toString)
 //    })
 
+    def printHist() = {
+      val histTrain = y.groupBy(x => x).mapValues(_.size)
+      println("Training set histogram: "+histTrain + "   Mean="+mean(histTrain.values.map(_.toDouble))+ "   STD="+stddev(histTrain.values.map(_.toDouble)))
+      val histTest = yCV.groupBy(x => x).mapValues(_.size)
+      println("Test set histogram: " + histTest + "   Mean=" + mean(histTest.values.map(_.toDouble)) + "   STD=" + stddev(histTest.values.map(_.toDouble)))
+      val histPred = result.groupBy(x => x).mapValues(_.size)
+      println("Prediction set histogram: " + histPred + "   Mean=" + mean(histPred.values.map(_.toDouble)) + "   STD=" + stddev(histPred.values.map(_.toDouble)))
+    }
+
+//    printHist()
     // print run time
     val lTime = (loadTime - startLoadTime)*1.0/1000000000
     val tTime = (trainTime - startTrainTime)*1.0/1000000000

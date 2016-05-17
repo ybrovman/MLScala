@@ -16,10 +16,16 @@ class KNN() extends Classifier {
   var trainingLabels: List[Int] = null
   var k: Int = 1 // default to 1-nearest neighbor
 
+  var useClusters = false
+  var trainingClusterMeans: DenseMatrix[Double] = null
+  var trainingClusterLabels: List[Int] = null
+
   override def train(data: DenseMatrix[Double], labels: List[Int]) = {
     require(data.rows == labels.length, s"data (length = ${data.rows}) should have same size as labels (length = ${labels.length})")
     trainingData = data
     trainingLabels = labels
+
+    if (useClusters) calculateClusterMeans()
   }
 
   override def predict(data: DenseMatrix[Double]): List[Int] = {
@@ -31,6 +37,25 @@ class KNN() extends Classifier {
     predictions
   }
 
+  def calculateClusterMeans() = {
+    trainingClusterLabels = trainingLabels.toSet[Int].toList
+    println(trainingClusterLabels)
+    val numClusters = trainingClusterLabels.size
+    val cols = trainingData.cols
+    var arrayMeans = Array[DenseVector[Double]]()
+
+    trainingClusterLabels.map( label => {
+      var tempSum = DenseVector.zeros[Double](cols)
+      val labelIndex = trainingLabels.zipWithIndex.filter(_._1 == label).map(_._2)
+
+      labelIndex.map( index => tempSum = tempSum + trainingData(index, ::).t )
+      val mean = tempSum :/ numClusters.toDouble
+      arrayMeans :+= mean
+    })
+
+    trainingClusterMeans = DenseMatrix(arrayMeans.map(_.toArray): _*)
+  }
+
   def predictDist(data: DenseMatrix[Double], distance: (DenseVector[Double]) => DenseVector[Double] = distanceEuclidean): List[List[(Double, Int)]] = {
     val numExamples = data.rows
     val examples = List.range(0, numExamples)
@@ -38,7 +63,8 @@ class KNN() extends Classifier {
     val predictions = examples.map( x => {
       val vec = data(x, ::).t
       val dist = distance(vec)
-      val distSorted = dist.toArray.toList.zip(trainingLabels).sorted
+      val labels = if (useClusters) trainingClusterLabels else trainingLabels
+      val distSorted = dist.toArray.toList.zip(labels).sorted
       distSorted
     })
 
@@ -46,13 +72,13 @@ class KNN() extends Classifier {
   }
 
   def distanceEuclidean(inputVector: DenseVector[Double]): DenseVector[Double] = {
-    val diff = trainingData(*, ::) - inputVector
+    val diff = if (useClusters) trainingClusterMeans(*, ::) - inputVector else trainingData(*, ::) - inputVector
     val dist = sqrt(sum(diff :* diff, Axis._1))
     dist
   }
 
   def distanceManhattan(inputVector: DenseVector[Double]): DenseVector[Double] = {
-    val diff = trainingData(*, ::) - inputVector
+    val diff = if (useClusters) trainingClusterMeans(*, ::) - inputVector else trainingData(*, ::) - inputVector
     val dist = sum(abs(diff), Axis._1)
     dist
   }
@@ -60,7 +86,7 @@ class KNN() extends Classifier {
   def getModes(inputList: List[Int]): List[Int] = {
     val grouped = inputList.groupBy(x => x).mapValues(_.size)
     val modeValue = grouped.maxBy(_._2)._2
-    val modes = grouped.filter(_._2 == modeValue).map(_._1).toList
+    val modes = grouped.filter(_._2 == modeValue).keys.toList
     modes
   }
 
