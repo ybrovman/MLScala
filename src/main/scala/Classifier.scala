@@ -1,5 +1,5 @@
-import breeze.linalg.{*, Axis, DenseMatrix, sum}
-import breeze.numerics.sqrt
+import breeze.linalg.{*, Axis, DenseMatrix, DenseVector, sum}
+import breeze.numerics.{abs, sqrt}
 
 trait Classifier {
   def train(data: DenseMatrix[Double], lables: List[Int])
@@ -31,19 +31,30 @@ class KNN() extends Classifier {
     predictions
   }
 
-  def predictDist(data: DenseMatrix[Double]): List[List[(Double, Int)]] = {
+  def predictDist(data: DenseMatrix[Double], distance: (DenseVector[Double]) => DenseVector[Double] = distanceEuclidean): List[List[(Double, Int)]] = {
     val numExamples = data.rows
     val examples = List.range(0, numExamples)
 
     val predictions = examples.map( x => {
-      val vec1 = data(x, ::).t
-      val diff = trainingData(*, ::) - vec1
-      val dist = sqrt(sum(diff :* diff, Axis._1))
+      val vec = data(x, ::).t
+      val dist = distance(vec)
       val distSorted = dist.toArray.toList.zip(trainingLabels).sorted
       distSorted
     })
 
     predictions
+  }
+
+  def distanceEuclidean(inputVector: DenseVector[Double]): DenseVector[Double] = {
+    val diff = trainingData(*, ::) - inputVector
+    val dist = sqrt(sum(diff :* diff, Axis._1))
+    dist
+  }
+
+  def distanceManhattan(inputVector: DenseVector[Double]): DenseVector[Double] = {
+    val diff = trainingData(*, ::) - inputVector
+    val dist = sum(abs(diff), Axis._1)
+    dist
   }
 
   def getModes(inputList: List[Int]): List[Int] = {
