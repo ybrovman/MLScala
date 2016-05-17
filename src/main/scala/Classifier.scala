@@ -1,6 +1,5 @@
-import breeze.linalg.{*, Axis, DenseMatrix, DenseVector, sum}
+import breeze.linalg.{*, Axis, DenseMatrix, sum}
 import breeze.numerics.sqrt
-import scala.util.Sorting
 
 trait Classifier {
   def train(data: DenseMatrix[Double], lables: List[Int])
