@@ -1,5 +1,5 @@
 import breeze.linalg.{*, Axis, DenseMatrix, DenseVector, sum}
-import breeze.numerics.{abs, sqrt}
+import breeze.numerics.{abs, exp, round, sqrt}
 
 trait Classifier {
   def train(data: DenseMatrix[Double], lables: List[Int])
@@ -7,8 +7,30 @@ trait Classifier {
 }
 
 class LogistricRegression() extends Classifier {
-  override def train(data: DenseMatrix[Double], labels: List[Int]) = println(data.size)
-  override def predict(data: DenseMatrix[Double]): List[Int] = List.fill(data.size)(0)
+  var beta: DenseVector[Double] = null
+
+  override def train(data: DenseMatrix[Double], labels: List[Int]) = {
+    require(data.rows == labels.length, s"data (length = ${data.rows}) should have same size as labels (length = ${labels.length})")
+    beta = DenseVector.ones[Double](2)
+
+
+
+  }
+
+  override def predict(data: DenseMatrix[Double]): List[Int] = {
+    require(data.cols+1 == beta.length, s"data (columns = ${data.cols}) + 1 should have same size as beta (length = ${beta.length})")
+    val intercept = DenseVector.ones[Double](data.rows).toDenseMatrix.t
+    val dataAndIntercept = DenseMatrix.horzcat(intercept, data)
+
+    val predictions = round(logit(dataAndIntercept * beta)).toArray.toList.map(_.toInt)
+
+    predictions
+  }
+
+  def logit(x: DenseVector[Double]): DenseVector[Double] = {
+    val ones = DenseVector.ones[Double](x.length)
+    ones / (ones + exp(-x))
+  }
 }
 
 class KNN() extends Classifier {

@@ -6,15 +6,21 @@ object RunModel {
     println("Running model...")
     val myLoader = new Loader
 
-//    runLogisticRegression(myLoader)
-    runKNN(myLoader)
+    runLogisticRegression(myLoader)
+//    runKNN(myLoader)
   }
 
   def runLogisticRegression(loader: Loader) = {
     val path = "data/iris.data"
     val (features,labels) = loader.loadIrisData(path)
-    println(features.rows)
-//    labels.foreach(println)
+
+    val len = labels.length
+    val cut = (0.6 * len).toInt
+    val (x, y, xCV, yCV) = (features(0 to cut-1, ::), labels.take(cut), features(cut to len-1, ::), labels.slice(cut, len))
+
+    val classifierLogit = new LogistricRegression
+    classifierLogit.train(x, y)
+    classifierLogit.predict(xCV)
   }
 
   def runKNN(loader: Loader) = {
