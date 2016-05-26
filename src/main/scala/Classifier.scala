@@ -11,16 +11,37 @@ class LogistricRegression() extends Classifier {
 
   override def train(data: DenseMatrix[Double], labels: List[Int]) = {
     require(data.rows == labels.length, s"data (length = ${data.rows}) should have same size as labels (length = ${labels.length})")
-    beta = DenseVector.ones[Double](2)
+    val M = data.rows
 
+    beta = DenseVector.ones[Double](data.cols + 1) // initialize beta to all 1's
+    val alpha = 1.0 // learning rate
+    val lambda = 1.0 // regularization parameter
+    val convergenceTolerance = 0.001
 
+    val intercept = DenseVector.ones[Double](data.rows)
+    val dataAndIntercept = DenseMatrix.horzcat(intercept.toDenseMatrix.t, data)
+    val y = DenseVector[Double](labels.map(_.toDouble).toArray)
 
+    // need to recursively find all beta values
+    val coef = alpha / M
+    val cols = List.range(0, dataAndIntercept.cols)
+    List.range(0,8).map( x => {
+      val hypothesis = logit(dataAndIntercept * beta)
+      val diff = hypothesis - y
+
+      cols.map(x => {
+        val vec = dataAndIntercept(::, x)
+        val prod = vec.t * diff
+        beta(x) = if (x != 0) beta(x) * (1 - coef * lambda) - coef * prod else beta(x) - coef * prod
+      })
+//      println("iteration "+x+"   "+beta)
+    })
   }
 
   override def predict(data: DenseMatrix[Double]): List[Int] = {
     require(data.cols+1 == beta.length, s"data (columns = ${data.cols}) + 1 should have same size as beta (length = ${beta.length})")
-    val intercept = DenseVector.ones[Double](data.rows).toDenseMatrix.t
-    val dataAndIntercept = DenseMatrix.horzcat(intercept, data)
+    val intercept = DenseVector.ones[Double](data.rows)
+    val dataAndIntercept = DenseMatrix.horzcat(intercept.toDenseMatrix.t, data)
 
     val predictions = round(logit(dataAndIntercept * beta)).toArray.toList.map(_.toInt)
 

@@ -1,9 +1,13 @@
 import breeze.linalg.{DenseMatrix, DenseVector}
 import scala.io.Source._
+import scala.util.Random
 
 class Loader {
   def loadIrisData(path: String) = {
-    val data = fromFile(path).getLines.map(_.split(",").map(_.trim)).toArray
+    val dataInput = fromFile(path).getLines.map(_.split(",").map(_.trim))
+
+    Random.setSeed(42)
+    val data = Random.shuffle(dataInput).toArray
     val features = DenseMatrix((data.map(_(0).toDouble)),
                                (data.map(_(1).toDouble)),
                                (data.map(_(2).toDouble)),

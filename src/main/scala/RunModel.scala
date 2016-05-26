@@ -20,7 +20,11 @@ object RunModel {
 
     val classifierLogit = new LogistricRegression
     classifierLogit.train(x, y)
-    classifierLogit.predict(xCV)
+    val result = classifierLogit.predict(xCV)
+
+    println(result.zip(yCV))
+    println("error="+error(result, yCV).toString)
+    println("Final beta = "+classifierLogit.beta)
   }
 
   def runKNN(loader: Loader) = {
