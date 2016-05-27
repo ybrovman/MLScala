@@ -1,5 +1,5 @@
 import breeze.linalg.{*, Axis, DenseMatrix, DenseVector, sum}
-import breeze.numerics.{abs, exp, round, sqrt}
+import breeze.numerics._
 
 trait Classifier {
   def train(data: DenseMatrix[Double], lables: List[Int])
@@ -8,31 +8,21 @@ trait Classifier {
 
 class LogistricRegression() extends Classifier {
   var beta: DenseVector[Double] = null
+  var alpha = 0.1 // learning rate
+  var lambda = 1.0 // regularization parameter
+
+  var convergenceTolerance = 0.01
+  var maxIterations = 500
 
   override def train(data: DenseMatrix[Double], labels: List[Int]) = {
     require(data.rows == labels.length, s"data (length = ${data.rows}) should have same size as labels (length = ${labels.length})")
-    val M = data.rows
 
     beta = DenseVector.ones[Double](data.cols + 1) // initialize beta to all 1's
-    val alpha = 1.0 // learning rate
-    val lambda = 1.0 // regularization parameter
-    val convergenceTolerance = 0.001
-
     val intercept = DenseVector.ones[Double](data.rows)
     val dataAndIntercept = DenseMatrix.horzcat(intercept.toDenseMatrix.t, data)
     val y = DenseVector[Double](labels.map(_.toDouble).toArray)
 
-    // need to recursively find all beta values
-    val coef = alpha / M
-    List.range(0,8).map( x => {
-      val prod = coef * dataAndIntercept.t * (sigmoid(dataAndIntercept * beta) - y)
-
-      val betaInterceptTemp = beta(0) - prod(0)
-      beta = beta * (1 - coef * lambda) - prod
-      beta(0) = betaInterceptTemp
-
-//      println("iteration "+x+"   "+beta)
-    })
+    optimize(dataAndIntercept, y)
   }
 
   override def predict(data: DenseMatrix[Double]): List[Int] = {
@@ -43,6 +33,35 @@ class LogistricRegression() extends Classifier {
     val predictions = round(sigmoid(dataAndIntercept * beta)).toArray.toList.map(_.toInt)
 
     predictions
+  }
+
+  def optimize(dataAndIntercept: DenseMatrix[Double], y: DenseVector[Double]): Unit = {
+    val M = y.length
+    val coef = alpha / M
+    var errorLast = 0.0
+
+    // need to recursively find all beta values
+    List.range(0,maxIterations).map( i => {
+      val prod = coef * dataAndIntercept.t * (sigmoid(dataAndIntercept * beta) - y)
+
+      val betaInterceptTemp = beta(0) - prod(0)
+      beta = beta * (1 - coef * lambda) - prod
+      beta(0) = betaInterceptTemp
+      // println("iteration " + i + "   " + beta)
+
+      // terminate the iterations
+      val errorTraining = error(dataAndIntercept, y)
+      // println("iteration " + i + "   " + errorTraining)
+
+      // stop when error does not improve by 100% * convergenceTolerance
+      if (i > 1 && errorLast * (1.0 - convergenceTolerance) < errorTraining) return
+      errorLast = errorTraining
+    })
+  }
+
+  def error(dataAndIntercept: DenseMatrix[Double], y: DenseVector[Double]) = {
+    val ones = DenseVector.ones[Double](y.length)
+    - ( y.t * log(sigmoid(dataAndIntercept * beta)) + (ones - y).t * log(ones - sigmoid(dataAndIntercept * beta)) ) / y.length
   }
 
   def sigmoid(x: DenseVector[Double]): DenseVector[Double] = {
