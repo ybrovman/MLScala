@@ -24,16 +24,13 @@ class LogistricRegression() extends Classifier {
 
     // need to recursively find all beta values
     val coef = alpha / M
-    val cols = List.range(0, dataAndIntercept.cols)
     List.range(0,8).map( x => {
-      val hypothesis = logit(dataAndIntercept * beta)
-      val diff = hypothesis - y
+      val prod = coef * dataAndIntercept.t * (sigmoid(dataAndIntercept * beta) - y)
 
-      cols.map(x => {
-        val vec = dataAndIntercept(::, x)
-        val prod = vec.t * diff
-        beta(x) = if (x != 0) beta(x) * (1 - coef * lambda) - coef * prod else beta(x) - coef * prod
-      })
+      val betaInterceptTemp = beta(0) - prod(0)
+      beta = beta * (1 - coef * lambda) - prod
+      beta(0) = betaInterceptTemp
+
 //      println("iteration "+x+"   "+beta)
     })
   }
@@ -43,12 +40,12 @@ class LogistricRegression() extends Classifier {
     val intercept = DenseVector.ones[Double](data.rows)
     val dataAndIntercept = DenseMatrix.horzcat(intercept.toDenseMatrix.t, data)
 
-    val predictions = round(logit(dataAndIntercept * beta)).toArray.toList.map(_.toInt)
+    val predictions = round(sigmoid(dataAndIntercept * beta)).toArray.toList.map(_.toInt)
 
     predictions
   }
 
-  def logit(x: DenseVector[Double]): DenseVector[Double] = {
+  def sigmoid(x: DenseVector[Double]): DenseVector[Double] = {
     val ones = DenseVector.ones[Double](x.length)
     ones / (ones + exp(-x))
   }
