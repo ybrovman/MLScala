@@ -32,21 +32,16 @@ object RunModel {
     println("error="+error(result, yCV).toString)
     println("Final beta = "+classifierLogit.beta)
 
-    def printHist() = {
-      val histTrain = y.groupBy(x => x).mapValues(_.size)
-      println("Training set histogram: "+histTrain + "   Mean="+mean(histTrain.values.map(_.toDouble))+ "   STD="+stddev(histTrain.values.map(_.toDouble)))
-      val histTest = yCV.groupBy(x => x).mapValues(_.size)
-      println("Test set histogram: " + histTest + "   Mean=" + mean(histTest.values.map(_.toDouble)) + "   STD=" + stddev(histTest.values.map(_.toDouble)))
-      val histPred = result.groupBy(x => x).mapValues(_.size)
-      println("Prediction set histogram: " + histPred + "   Mean=" + mean(histPred.values.map(_.toDouble)) + "   STD=" + stddev(histPred.values.map(_.toDouble)))
-    }
-    printHist
-//    val lambdas = List(100.0, 30.0, 10.0, 3.0, 1.0, 0.3, 0.1, 0.03, 0.01, 0.003, 0.001, 0.0)
+    printHist(y, yCV, result)
+
+    // optimize for best lambda
+//    val lambdas = List(100.0, 30.0, 10.0, 3.0, 1.0, 0.3, 0.1, 0.03, 0.01, 0.003, 0.001, 0.0) // for Iris
+//    val lambdas = List(100000000.0, 30000000.0, 10000000.0, 3000000.0, 1000000.0, 300000.0, 100000.0) // for MNIST
 //    val errors = lambdas.map( lambda => {
 //      classifierLogit.lambda = lambda
 //      classifierLogit.train(x, y)
 //      val result = classifierLogit.predict(xCV)
-//      println("error="+error(result, yCV).toString)
+//      println("lambda = "+classifierLogit.lambda+"   error="+error(result, yCV).toString)
 //
 //      // calculate training anc CV error
 //      val intercept = DenseVector.ones[Double](x.rows)
@@ -59,7 +54,7 @@ object RunModel {
 //
 //      (errorTrain, errorCV)
 //    })
-
+//
 //    lambdas.zip(errors).foreach(println)
 //    println("Training error:")
 //    errors.map(_._1).foreach(x=>print(x+","))
@@ -101,22 +96,22 @@ object RunModel {
 //      println("k="+x.toString+"   error="+error(result, yCV).toString)
 //    })
 
-    def printHist() = {
-      val histTrain = y.groupBy(x => x).mapValues(_.size)
-      println("Training set histogram: "+histTrain + "   Mean="+mean(histTrain.values.map(_.toDouble))+ "   STD="+stddev(histTrain.values.map(_.toDouble)))
-      val histTest = yCV.groupBy(x => x).mapValues(_.size)
-      println("Test set histogram: " + histTest + "   Mean=" + mean(histTest.values.map(_.toDouble)) + "   STD=" + stddev(histTest.values.map(_.toDouble)))
-      val histPred = result.groupBy(x => x).mapValues(_.size)
-      println("Prediction set histogram: " + histPred + "   Mean=" + mean(histPred.values.map(_.toDouble)) + "   STD=" + stddev(histPred.values.map(_.toDouble)))
-    }
-
-//    printHist()
+    printHist(y, yCV, result)
     // print run time
     val lTime = (loadTime - startLoadTime)*1.0/1000000000
     val tTime = (trainTime - startTrainTime)*1.0/1000000000
     val pTime = (predictionTime - startTrainTime)*1.0/1000000000
     println("Load time = "+lTime+"s   Trainin time = "+tTime+"s   Prediction time = "+pTime+"s")
     println("k="+classifierKNN.k+"   error="+error(result, yCV).toString)
+  }
+
+  def printHist(y: List[Int], yCV: List[Int], result: List[Int]) = {
+    val histTrain = y.groupBy(x => x).mapValues(_.size)
+    println("Training set histogram: "+histTrain + "   Mean="+mean(histTrain.values.map(_.toDouble))+ "   STD="+stddev(histTrain.values.map(_.toDouble)))
+    val histTest = yCV.groupBy(x => x).mapValues(_.size)
+    println("Test set histogram: " + histTest + "   Mean=" + mean(histTest.values.map(_.toDouble)) + "   STD=" + stddev(histTest.values.map(_.toDouble)))
+    val histPred = result.groupBy(x => x).mapValues(_.size)
+    println("Prediction set histogram: " + histPred + "   Mean=" + mean(histPred.values.map(_.toDouble)) + "   STD=" + stddev(histPred.values.map(_.toDouble)))
   }
 
   def error(predictions: List[Int], truth: List[Int]): Double = {
