@@ -24,4 +24,12 @@ class Loader {
     val labels = data.map(_(0).toInt).toList
     (features, labels)
   }
+
+  def loadMNISTDataBinary(path: String, num1: Int, num2: Int) = {
+    val dataInput = fromFile(path).getLines.map(_.split(",").map(_.toDouble) ).toArray
+    val data = dataInput.filter( ar => ar(0).toInt == num1 || ar(0).toInt == num2 )
+    val features = DenseMatrix(data.map(_.drop(1)): _*)
+    val labels = data.map( ar => if (ar(0).toInt == num1) 0 else 1 ).toList
+    (features, labels)
+  }
 }

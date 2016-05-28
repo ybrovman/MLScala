@@ -17,7 +17,7 @@ class LogistricRegression() extends Classifier {
   override def train(data: DenseMatrix[Double], labels: List[Int]) = {
     require(data.rows == labels.length, s"data (length = ${data.rows}) should have same size as labels (length = ${labels.length})")
 
-    beta = DenseVector.ones[Double](data.cols + 1) // initialize beta to all 1's
+    beta = DenseVector.zeros[Double](data.cols + 1) // initialize beta to all 0's
     val intercept = DenseVector.ones[Double](data.rows)
     val dataAndIntercept = DenseMatrix.horzcat(intercept.toDenseMatrix.t, data)
     val y = DenseVector[Double](labels.map(_.toDouble).toArray)
